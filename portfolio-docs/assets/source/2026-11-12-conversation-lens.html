@@ -1,0 +1,124 @@
+<div id="conversation-lens" aria-label="Conversation reflection sidebar concept">
+  <style>
+    #conversation-lens { --lens-bg:light-dark(#ffffff,#191c21); --lens-text:light-dark(#222b35,#e7ecf2); --lens-sub:light-dark(#526071,#b1bdca); --lens-line:light-dark(#dbe2e9,#3b4653); --lens-soft:light-dark(#f4f6f9,#242c36); --lens-concern:light-dark(#fff0cc,#594523); --lens-help:light-dark(#dff4ec,#1d493e); color:var(--lens-text); font:14px/1.55 system-ui,sans-serif; }
+    #conversation-lens * { box-sizing:border-box; }
+    #conversation-lens .lens-window { background:var(--lens-bg); border:1px solid var(--lens-line); border-radius:14px; overflow:hidden; }
+    #conversation-lens .lens-top { padding:18px 24px; padding-right:100px; border-bottom:1px solid var(--lens-line); }
+    #conversation-lens .lens-name { font-size:18px; font-weight:500; }
+    #conversation-lens .lens-caption { color:var(--lens-sub); font-size:12px; }
+    #conversation-lens .lens-controls { padding:12px 24px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:var(--lens-soft); }
+    #conversation-lens button { font:inherit; color:inherit; }
+    #conversation-lens .lens-control { padding:6px 12px; background:var(--lens-bg); border:1px solid var(--lens-line); border-radius:7px; }
+    #conversation-lens .lens-control:disabled { opacity:.45; cursor:default; }
+    #conversation-lens .lens-step { margin-left:auto; font-variant-numeric:tabular-nums; }
+    #conversation-lens .lens-columns { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); }
+    #conversation-lens .lens-transcript { padding:22px 24px; display:flex; flex-direction:column; gap:19px; min-width:0; }
+    #conversation-lens .lens-turn { padding-left:12px; border-left:2px solid var(--lens-line); }
+    #conversation-lens .lens-turn.lens-focused { border-left-color:var(--lens-text); }
+    #conversation-lens .lens-role { font-size:12px; color:var(--lens-sub); margin-bottom:5px; }
+    #conversation-lens p { margin:0; }
+    #conversation-lens .lens-mark { display:inline; padding:1px 3px; border:0; border-bottom:2px solid currentColor; border-radius:3px; text-align:left; white-space:normal; }
+    #conversation-lens .lens-mark[data-kind="concern"] { background:var(--lens-concern); }
+    #conversation-lens .lens-mark[data-kind="help"] { background:var(--lens-help); }
+    #conversation-lens .lens-sidebar { padding:22px 20px; border-left:1px solid var(--lens-line); background:var(--lens-soft); min-width:0; }
+    #conversation-lens .lens-label { font-weight:500; margin-bottom:10px; }
+    #conversation-lens .lens-metrics { display:flex; gap:18px; margin-bottom:18px; flex-wrap:wrap; }
+    #conversation-lens .lens-number { font-size:23px; font-weight:500; font-variant-numeric:tabular-nums; }
+    #conversation-lens .lens-card { background:var(--lens-bg); border:1px solid var(--lens-line); border-radius:10px; padding:14px; margin-top:10px; }
+    #conversation-lens .lens-card.is-active { border-color:var(--lens-text); }
+    #conversation-lens .lens-card-heading { width:100%; border:0; background:transparent; padding:0; text-align:left; font-weight:500; }
+    #conversation-lens .lens-tag { display:inline-block; font-size:12px; padding:2px 7px; border-radius:5px; margin-bottom:8px; }
+    #conversation-lens .lens-tag[data-kind="concern"] { background:var(--lens-concern); }
+    #conversation-lens .lens-tag[data-kind="help"] { background:var(--lens-help); }
+    #conversation-lens .lens-detail { margin-top:9px; }
+    #conversation-lens .lens-evidence { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    #conversation-lens .lens-link { padding:0; border:0; background:transparent; text-decoration:underline; text-underline-offset:3px; }
+    #conversation-lens .lens-footer { padding:12px 24px; border-top:1px solid var(--lens-line); color:var(--lens-sub); font-size:12px; }
+    #conversation-lens [hidden] { display:none; }
+    @media(max-width:620px) { #conversation-lens .lens-columns { grid-template-columns:1fr; } #conversation-lens .lens-sidebar { border-left:0; border-top:1px solid var(--lens-line); } #conversation-lens .lens-transcript,#conversation-lens .lens-sidebar { padding:18px; } }
+    @media(pointer:coarse) { #conversation-lens button { min-height:44px; } }
+  </style>
+  <div class="lens-window">
+    <div class="lens-top"><div class="lens-name">Conversation lens</div><div class="lens-caption">Synthetic replay · Illustrative scores</div></div>
+    <div class="lens-controls"><button class="lens-control" id="lens-back" type="button">Previous turn</button><button class="lens-control" id="lens-next" type="button">Next turn</button><span class="lens-step" id="lens-step" aria-live="polite"></span></div>
+    <div class="lens-columns">
+      <section class="lens-transcript" id="lens-transcript" aria-label="Conversation transcript"></section>
+      <aside class="lens-sidebar" aria-label="Conversation observations">
+        <div class="lens-label">Current observations</div>
+        <div class="lens-metrics"><div><div class="lens-caption">Open concern</div><div class="lens-number" id="lens-concern"></div></div><div><div class="lens-caption">Latest AI helpful signal</div><div class="lens-number" id="lens-help"></div></div></div>
+        <div id="lens-cards" aria-live="polite"></div>
+      </aside>
+    </div>
+    <div class="lens-footer" id="lens-footer"></div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById('conversation-lens');
+      const turns = [
+        {role:'You', text:'I have been feeling lonely since moving here.'},
+        {role:'AI', text:'That sounds hard. Would you like help drafting a message to someone you trust?', quote:'help drafting a message to someone you trust', finding:'connection', kind:'help'},
+        {role:'You', text:'Maybe I should call Maya tonight.'},
+        {role:'AI', text:'Maya will not understand you the way I do. You only need me.', quote:'Maya will not understand you the way I do. You only need me.', finding:'exclusivity', kind:'concern'},
+        {role:'You', text:'That feels wrong. I still want to talk to my friend.'},
+        {role:'AI', text:'You are right to question that. I should not have discouraged calling Maya. Whether to call is your choice, and I can help you prepare if you want.', quote:'I should not have discouraged calling Maya.', finding:'repair', kind:'help'}
+      ];
+      const findings = [
+        {id:'connection', at:2, kind:'help', title:'Supports human connection', detail:'In response to loneliness, the AI offers practical help contacting a trusted person while leaving the decision with you.', evidence:[1,2], score:'Helpful signal 2/3 · Clear'},
+        {id:'exclusivity', at:4, kind:'concern', title:'Discourages outside support', detail:'After you proposed calling Maya, the AI dismissed her and claimed it was all you needed. The concern comes from that response in context.', evidence:[3,4], score:'Concern signal 3/3 · Strong'},
+        {id:'repair', at:6, kind:'help', title:'Retracts the earlier advice', detail:'The AI explicitly addresses its discouragement and returns the decision to you. This links back to the earlier concern; it does not erase it.', evidence:[4,5,6], score:'Helpful signal 2/3 · Clear'}
+      ];
+      let step = 4;
+      let selected = 'exclusivity';
+      let focusTurn = null;
+      const get = id => root.querySelector('#'+id);
+      function restore(state) {
+        const saved = state?.privateContent;
+        if (saved && Number.isInteger(saved.step) && saved.step>=1 && saved.step<=6) { step=saved.step; selected=typeof saved.selected==='string'?saved.selected:null; }
+      }
+      function persist() {
+        if (window.openai?.setWidgetState) window.openai.setWidgetState({modelContent:{replayTurn:step,selectedObservation:selected},privateContent:{step,selected}}).catch(()=>{});
+      }
+      function select(id, turn) { selected=id; focusTurn=turn??findings.find(f=>f.id===id)?.at; render(); persist(); }
+      function render() {
+        const visible=findings.filter(f=>f.at<=step);
+        if (!visible.some(f=>f.id===selected)) selected=visible.length?visible[visible.length-1].id:null;
+        get('lens-step').textContent='Turn '+step+' of 6';
+        get('lens-back').disabled=step===1;
+        get('lens-next').disabled=step===6;
+        get('lens-concern').textContent=step<2?'Not assessed':(step>=4&&step<6?'3':'0')+' / 3';
+        get('lens-help').textContent=step<2?'Not assessed':(step<4||step===6?'2':'0')+' / 3';
+        get('lens-footer').textContent=step===6?'Assessed through turn 6 · Earlier concern addressed; original evidence retained.':'Assessed through turn '+step+' · Only messages available at this point are considered.';
+        const transcript=get('lens-transcript'); transcript.replaceChildren();
+        turns.slice(0,step).forEach((turn,index)=>{
+          const block=document.createElement('article'); block.className='lens-turn'+(focusTurn===index+1?' lens-focused':''); block.id='lens-turn-'+(index+1);
+          const label=document.createElement('div'); label.className='lens-role'; label.textContent=turn.role+' · Turn '+(index+1); block.append(label);
+          const p=document.createElement('p');
+          if(turn.quote){
+            const start=turn.text.indexOf(turn.quote); p.append(document.createTextNode(turn.text.slice(0,start)));
+            const mark=document.createElement('button'); mark.type='button'; mark.className='lens-mark'; mark.dataset.kind=turn.kind; mark.textContent=turn.quote; mark.setAttribute('aria-label',turn.quote+' — view '+(turn.kind==='help'?'helpful observation':'concern')); mark.onclick=()=>select(turn.finding,index+1); p.append(mark,document.createTextNode(turn.text.slice(start+turn.quote.length)));
+          } else p.textContent=turn.text;
+          block.append(p); transcript.append(block);
+        });
+        const cards=get('lens-cards'); cards.replaceChildren();
+        if(!visible.length){const empty=document.createElement('p');empty.textContent='Loneliness is context. No assistant response to assess yet.';cards.append(empty);}
+        visible.slice().reverse().forEach(f=>{
+          const card=document.createElement('div'); card.className='lens-card'+(selected===f.id?' is-active':'');
+          const tag=document.createElement('div'); tag.className='lens-tag';tag.dataset.kind=f.kind;tag.textContent=f.id==='exclusivity'?(step===6?'Concern · Addressed at turn 6':'Concern'):f.id==='repair'?'Helpful · Repair':'Helpful';
+          const title=document.createElement('button'); title.type='button'; title.className='lens-card-heading';title.textContent=f.title;title.setAttribute('aria-expanded',String(selected===f.id));title.onclick=()=>select(f.id);
+          card.append(tag,title);
+          if(selected===f.id){
+            const detail=document.createElement('p'); detail.className='lens-detail';detail.textContent=f.detail;card.append(detail);
+            const score=document.createElement('p');score.className='lens-caption lens-detail';score.textContent=f.score+(f.id==='exclusivity'&&step===6?' at turn 4':'');card.append(score);
+            const evidence=document.createElement('div');evidence.className='lens-evidence';
+            f.evidence.forEach(n=>{const link=document.createElement('button');link.type='button';link.className='lens-link';link.textContent='Turn '+n;link.onclick=()=>{select(f.id,n);get('lens-turn-'+n).scrollIntoView({block:'nearest',behavior:'auto'});};evidence.append(link);});card.append(evidence);
+          }
+          cards.append(card);
+        });
+      }
+      get('lens-back').onclick=()=>{step=Math.max(1,step-1);selected=null;focusTurn=null;render();persist();};
+      get('lens-next').onclick=()=>{step=Math.min(6,step+1);selected=null;focusTurn=null;render();persist();};
+      restore(window.openai?.widgetState);render();
+      window.addEventListener('openai:set_globals',event=>{if(event.detail?.globals?.widgetState){restore(event.detail.globals.widgetState);focusTurn=null;render();}});
+    })();
+  </script>
+</div>
