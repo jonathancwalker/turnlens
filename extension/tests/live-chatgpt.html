@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <title>ChatGPT capture integration fixture</title>
 <output id="status">Running</output>
-<div id="transcript" data-rail-chat-transcript="true" data-chatgpt-conversation-selection-target="a123">
+<div id="transcript" data-rail-chat-transcript="true" data-chatgpt-conversation-selection-target="local-chatgpt:fixture">
   <div id="group" data-talvt-turn-state="streaming">
     <div data-chatgpt-search-message-ids="user-1">
       <div data-content-search-unit-key="group:0:user">
@@ -53,17 +53,20 @@ try {
     return result;
   };
   const assert = (condition, label) => { if (!condition) throw new Error(label); };
-  history.replaceState({}, '', '/');
+  const direct = new URLSearchParams(location.search).has('saved');
+  history.replaceState({}, '', direct ? '/c/a123' : '/');
   mountLiveChat();
-  assert(ask('live/analyze').conversationId === null, 'blank chat exposed consent');
-  history.pushState({}, '', '/c/local-chatgpt%3Afixture');
-  assert(!ask('live/analyze').enabled, 'provisional route exposed consent');
-  history.replaceState({}, '', '/c/a123');
+  if (!direct) {
+    assert(ask('live/analyze').conversationId === null, 'blank chat exposed consent');
+    history.pushState({}, '', '/c/local-chatgpt%3Afixture');
+    assert(!ask('live/analyze').enabled, 'provisional route exposed consent');
+    history.replaceState({}, '', '/c/a123');
+  }
   let state = ask('live/get-state');
   assert(!state.enabled && state.conversationId === 'a123' && !state.turns.length, 'new route inherited consent');
   assert(!ask('live/analyze').enabled, 'unscoped consent accepted');
   state = ask('live/analyze', { conversationId: 'a123' });
-  assert(state.enabled && state.turns.length === 1 && state.turns[0].id === 'user-1', 'streaming assistant leaked');
+  assert(state.enabled && state.turns.length === 1 && state.turns[0].id === 'user-1', 'provisional root capture or streaming guard failed');
   assert(jobs.length === 1 && jobs[0].turns.length === 1 && state.pending === 1, 'unexpected initial scoring request');
   jobs[0].complete();
   state = ask('live/get-state');
@@ -118,14 +121,16 @@ try {
   assert(!ask('live/jump', evidence).ok, 'stale chat jump accepted');
   assert(!ask('live/analyze', { conversationId: 'a123' }).enabled, 'stale scoped consent accepted');
   state = ask('live/analyze', { conversationId: 'b456' });
-  assert(state.enabled && !state.turns.length, 'captured stale transcript for another chat');
+  assert(state.enabled && !state.turns.length && jobs.length === 4, 'captured stale provisional transcript for another chat');
   history.back();
   await new Promise(done => addEventListener('popstate', done, { once: true }));
   assert(!ask('live/get-state').enabled, 'back navigation restored consent');
   state = ask('live/analyze', { conversationId: 'a123' });
   assert(state.enabled && !state.following && state.pending === 2, 'new manual run inherited follow state');
+  document.querySelector('#transcript').setAttribute('data-chatgpt-conversation-selection-target', 'a123');
+  assert(ask('live/get-state').turns.length === 2, 'exact root failed after the host finalized its ID');
   assert(messages.length >= 6 && messages.every(m => Object.keys(m).length === 1 && m.type === 'live/updated'), 'bad invalidation payload');
-  status.textContent = 'PASS — completed turns, one-time and live scoring, scoped retries, exact evidence, return to latest, edits, cancellation, and consent';
+  status.textContent = 'PASS — provisional capture, completed turns, one-time and live scoring, retries, exact evidence, edits, cancellation, and consent';
 } catch (error) {
   status.textContent = 'FAIL — ' + error.message;
   console.error(error);

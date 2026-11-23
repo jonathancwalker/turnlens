@@ -73,10 +73,11 @@ function evidenceRange(body, text, start, end) {
   return range;
 }
 
-function readCompletedTurns(conversationId) {
-  const transcript = [...document.querySelectorAll(transcriptSelector)].find(element =>
-    element.getAttribute('data-chatgpt-conversation-selection-target') === conversationId &&
-    element.checkVisibility({ visibilityProperty: true }));
+function transcriptKey(element) {
+  return element.getAttribute('data-chatgpt-conversation-selection-target');
+}
+
+function readCompletedTurns(transcript) {
   const turns = new Map();
   if (!transcript) return [];
 
@@ -103,6 +104,8 @@ export function mountLiveChat({ harness = false } = {}) {
     ? () => document.querySelector(harnessSelector)?.dataset.conversationId ?? null
     : currentConversation;
   let conversationId = getConversation();
+  const provisionalOwners = new Map();
+  let allowNewProvisional = !harness && conversationId !== null;
   let enabled = false;
   let following = false;
   let records = [];
@@ -150,6 +153,9 @@ export function mountLiveChat({ harness = false } = {}) {
   function syncConversation() {
     const next = getConversation();
     if (conversationId === next) return false;
+    // A new chat can keep its temporary root when the saved URL first appears.
+    // A saved-to-saved navigation can briefly leave the previous root visible.
+    allowNewProvisional = !harness && conversationId === null && next !== null;
     conversationId = next;
     enabled = false;
     reset();
@@ -157,10 +163,29 @@ export function mountLiveChat({ harness = false } = {}) {
     return true;
   }
 
+  function resolveTranscript() {
+    if (!conversationId) return null;
+    const visible = [...document.querySelectorAll(transcriptSelector)].filter(element =>
+      element.checkVisibility({ visibilityProperty: true }));
+    const exact = visible.find(element => transcriptKey(element) === conversationId);
+    if (exact) return exact;
+    if (visible.length !== 1) return null;
+    const [candidate] = visible;
+    const key = transcriptKey(candidate);
+    if (!key?.startsWith('local-chatgpt:')) return null;
+    if (!provisionalOwners.has(key) && allowNewProvisional) {
+      provisionalOwners.set(key, conversationId);
+      allowNewProvisional = false;
+    }
+    return provisionalOwners.get(key) === conversationId ? candidate : null;
+  }
+
   function scan() {
     syncConversation();
+    // Associate root identity before consent, without reading message text.
+    const transcript = harness ? null : resolveTranscript();
     if (!enabled) return false;
-    const next = harness ? harnessTurns() : readCompletedTurns(conversationId);
+    const next = harness ? harnessTurns() : readCompletedTurns(transcript);
     let shared = 0;
     while (shared < records.length && shared < next.length) {
       const old = records[shared];
@@ -468,7 +493,7 @@ export function mountLiveChat({ harness = false } = {}) {
 
   function onNavigation() {
     syncConversation();
-    if (!enabled || scheduled) return;
+    if (scheduled || (harness && !enabled)) return;
     scheduled = true;
     requestAnimationFrame(() => {
       scheduled = false;
@@ -494,5 +519,6 @@ export function mountLiveChat({ harness = false } = {}) {
     attributeFilter: ['data-talvt-turn-state', 'data-chatgpt-conversation-selection-target',
       'data-chatgpt-search-message-ids', 'data-content-search-unit-key', 'data-conversation-id', 'hidden', 'aria-hidden'],
   });
+  scan();
   invalidate();
 }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Conversation Lens UX Prototype",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuT5pys/3mk5KXww+OBNtZ0cbCVNyOr/yhC85c4D7/CpYqBVgHKrj6MIG0QynnruBTmmRr6ad5EmLYyvskIct6d6HS0r1Mr+S5TXe+8Utj+Xfb+WJvGDj8fWOj/+eK+HC7M4/BN/kBmL/zLdRKfXNqhAEnoWhlE71EqwPA+ZwJHeH7240cnvZWsVbC5csdXuyz66o+waLGRWEGxngFTszqQky2YTBSFESxON+D/iG4gw6fl0CkkYWdXHh6QK8HtKBWsvkwnPMeH5r2Jx0XzachyGQCggAjVZ9ah06U5FAAKgOVZP9K0OwMef7dcGj7DHB78Mi/LJGA9xUET/9hf9ssQIDAQAB",
   "description": "A local prototype of a conversation timeline in Chrome's side panel.",
   "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
