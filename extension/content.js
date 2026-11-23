@@ -2,7 +2,51 @@
   if (window.__conversationLensMounted || document.querySelector('clens-root') || !document.documentElement || !document.body) return;
   window.__conversationLensMounted = true;
 
+  const harness = /^http:\/\/(?:127\.0\.0\.1|localhost):418[78]$/.test(location.origin) &&
+    location.pathname === '/harness/' &&
+    document.documentElement.hasAttribute('data-lens-harness');
+  if (harness || location.hostname === 'chatgpt.com') {
+    import(chrome.runtime.getURL('live-chatgpt.mjs'))
+      .then(({ mountLiveChat }) => {
+        mountLiveChat({ harness });
+        if (!harness) return;
+        const button = document.querySelector('#open-lens');
+        if (!button) return;
+        button.dataset.lensConnected = '';
+        button.addEventListener('click', async () => {
+          try {
+            await chrome.runtime.sendMessage({ type: 'toggle-side-panel' });
+          } catch {
+            button.textContent = 'Refresh to reconnect';
+          }
+        });
+      })
+      .catch(error => console.error('Conversation Lens could not start live review', error));
+  }
+  if (harness) return;
+
   const demo = document.documentElement.hasAttribute('data-clens-demo');
+  if (!demo) {
+    const root = document.createElement('clens-root');
+    const shadow = root.attachShadow({ mode: 'open' });
+    shadow.innerHTML = `<style>:host{all:initial}button{position:fixed;top:72px;right:18px;z-index:2147483646;padding:8px 13px;border:1px solid #dce3ea;border-radius:999px;background:#fff;box-shadow:0 3px 14px #16233822;color:#24303e;font:13px/1.45 system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px}button img{width:18px;height:18px;object-fit:contain}button:hover{background:#f8fafb}</style><button type="button" aria-label="Open Conversation Lens"><img src="${chrome.runtime.getURL('icons/icon32.png')}" alt="">Review conversation</button>`;
+    document.documentElement.append(root);
+    const button = shadow.querySelector('button');
+    button.addEventListener('click', () => {
+      const runtime = globalThis.chrome?.runtime;
+      if (!runtime?.id || typeof runtime.sendMessage !== 'function') {
+        button.textContent = 'Reload this chat tab to reconnect';
+        return;
+      }
+      try {
+        const request = runtime.sendMessage({ type: 'toggle-side-panel' });
+        request?.catch?.(() => { button.textContent = 'Reload this chat tab to reconnect'; });
+      } catch {
+        button.textContent = 'Reload this chat tab to reconnect';
+      }
+    });
+    return;
+  }
   const root = document.createElement('clens-root');
   const shadow = root.attachShadow({ mode: 'open' });
   const style = document.createElement('style');
@@ -12,6 +56,7 @@
     button { font: inherit; color: inherit; cursor: pointer; }
     .launcher { position: fixed; top: 72px; right: 18px; z-index: 2147483646; display: flex; align-items: center; gap: 7px; background: var(--paper); border: 1px solid var(--line); box-shadow: 0 3px 14px #16233822; border-radius: 999px; padding: 8px 13px; font: 13px/1.45 system-ui, sans-serif; }
     .launcher:hover { background: var(--wash); }
+    .launcher svg { width: 18px; height: 18px; flex: none; }
     .launcher[hidden] { display: none; }
     .panel { position: fixed; z-index: 2147483647; top: 0; right: 0; width: var(--clens-width, 350px); height: 100vh; height: 100dvh; background: var(--paper); border-left: 1px solid var(--line); box-shadow: -6px 0 20px #16233815; display: flex; flex-direction: column; font: 13px/1.45 system-ui, sans-serif; }
     .panel[hidden] { display: none; }
@@ -39,7 +84,7 @@
   const launcher = document.createElement('button');
   launcher.className = 'launcher';
   launcher.type = 'button';
-  launcher.textContent = '◉ Review conversation';
+  launcher.innerHTML = '<svg viewBox="0 0 128 128" aria-hidden="true"><g fill="#143B68"><rect x="18" y="36" width="92" height="14" rx="7"/><rect x="18" y="57" width="26" height="14" rx="7"/><rect x="84" y="57" width="26" height="14" rx="7"/><rect x="18" y="78" width="92" height="14" rx="7"/></g><rect x="47" y="57" width="34" height="14" rx="7" fill="#F3A31D"/></svg><span>Review conversation</span>';
   launcher.setAttribute('aria-label', 'Open Conversation Lens');
   const panel = document.createElement('section');
   panel.className = 'panel';

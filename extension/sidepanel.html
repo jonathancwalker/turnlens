@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Conversation Lens</title>
+  <link rel="stylesheet" href="sidepanel.css">
+  <script type="module" src="sidepanel.mjs"></script>
+</head>
+<body>
+  <header class="panel-header">
+    <h1><img src="icons/icon48.png" alt="" width="30" height="30">Conversation Lens</h1>
+    <div class="connection">
+      <p id="connection-status" role="status">Connecting to this tab…</p>
+      <button type="button" class="analyze-button" id="analysis" aria-describedby="analysis-privacy" hidden>Analyze this chat</button>
+      <label class="analysis-control" id="analysis-control" hidden>
+        Analyze new messages
+        <input id="follow" type="checkbox" role="switch" aria-describedby="analysis-privacy">
+        <span class="switch" aria-hidden="true"></span>
+      </label>
+    </div>
+    <p id="analysis-privacy" class="privacy" hidden>Sends messages from this chat to OpenAI for scoring.</p>
+    <p class="notice" id="analysis-notice" role="status"></p>
+    <p id="judge-status" class="privacy" role="status" hidden></p>
+    <button id="retry-scoring" type="button" hidden>Retry scoring</button>
+  </header>
+  <main>
+    <div id="signals"></div>
+    <p id="empty" class="empty" role="status" hidden></p>
+  </main>
+</body>
+</html>

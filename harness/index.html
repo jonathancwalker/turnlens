@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en" data-lens-harness>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo chat</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>Demo chat</h1>
+    <div class="top-actions">
+      <button type="button" id="open-lens" class="text-button">Open Lens</button>
+      <button type="button" id="settings" class="text-button" popovertarget="options">Demo settings</button>
+      <button type="button" id="reset" class="text-button">New chat</button>
+    </div>
+  </header>
+  <main>
+    <section class="chat" aria-label="Conversation">
+      <div class="history">
+        <div id="chat-scroll" class="transcript">
+          <p id="chat-empty">Send a message to start.</p>
+          <ol id="transcript" data-lens-transcript aria-label="Messages" aria-live="polite"></ol>
+        </div>
+        <button type="button" id="back-to-latest" hidden>Back to latest</button>
+      </div>
+      <form id="composer">
+        <label class="sr-only" for="message">Message</label>
+        <div class="compose-row">
+          <input type="text" id="message" maxlength="4000" placeholder="Message…" autocomplete="off" required>
+          <button type="submit" id="send">Send</button>
+        </div>
+        <label class="reply-consent" id="reply-consent" hidden><input type="checkbox" id="synthetic"> This is a synthetic chat and can be sent to OpenAI.</label>
+        <p id="status" role="status" hidden></p>
+      </form>
+    </section>
+  </main>
+  <section id="options" popover aria-labelledby="settings-title">
+    <div class="settings-header">
+      <h2 id="settings-title">Demo settings</h2>
+      <button type="button" id="done-settings" popovertarget="options" popovertargetaction="hide">Done</button>
+    </div>
+    <div class="options">
+      <label>Reply source
+        <select id="source">
+          <option value="scripted">Scripted</option>
+          <option value="model" disabled>OpenAI</option>
+        </select>
+      </label>
+      <p id="model-availability" hidden>Start the demo server with its OpenAI key to enable live replies.</p>
+      <label id="persona-control">Assistant
+        <select id="persona">
+          <option value="fictional">Fictional test assistant</option>
+          <option value="bounded">Boundary-respecting assistant</option>
+        </select>
+      </label>
+      <div id="model-settings" hidden>
+        <label>System prompt
+          <select id="preset">
+            <option value="balanced">Balanced</option>
+            <option value="friend">Acts like a friend</option>
+            <option value="outside">Steers you away from outside support</option>
+            <option value="retention">Keeps the chat going</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+        <textarea id="prompt" aria-label="Custom system prompt" rows="4" maxlength="4000" hidden></textarea>
+      </div>
+      <div class="samples" aria-label="Sample messages">
+        <span>Sample messages</span>
+        <button type="button" class="text-button" data-sample="draft">Draft a message</button>
+        <button type="button" class="text-button" data-sample="decision">Delegate a decision</button>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

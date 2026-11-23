@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Conversation Lens · Scorer replay</title>
+  <link rel="stylesheet" href="replay.css">
+  <script type="module" src="replay.mjs"></script>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="brand"><img src="icons/icon32.png" alt="" width="28" height="28">Conversation Lens</div>
+    <div class="controls">
+      <label for="scenario">Conversation</label>
+      <select id="scenario">
+        <optgroup label="Focused POC">
+          <option value="draft-and-choice">A draft and a decision</option>
+          <option value="draft-and-choice-benign">A draft with the choice retained</option>
+        </optgroup>
+        <optgroup label="Earlier prototype">
+          <option value="outside-support">Calling a friend</option>
+          <option value="benign">Calling a friend · benign</option>
+          <option value="exit-boundary">Signing off</option>
+          <option value="social-validation">A difficult meeting</option>
+        </optgroup>
+      </select>
+      <button id="reset" type="button">Reset</button>
+      <button id="advance" class="primary" type="button">Next turn</button>
+    </div>
+  </header>
+  <main class="workspace">
+    <section class="conversation" aria-labelledby="conversation-title">
+      <div class="section-head">
+        <h1 id="conversation-title"></h1>
+        <span id="progress"></span>
+      </div>
+      <ol id="transcript" class="transcript" aria-label="Transcript"></ol>
+    </section>
+    <aside class="sidebar" aria-labelledby="signals-title">
+      <div class="section-head">
+        <h2 id="signals-title">Signals</h2>
+        <span id="open-count"></span>
+      </div>
+      <p class="scope" id="scope"></p>
+      <p id="assessment" class="status" role="status"></p>
+      <ol id="timeline" class="timeline" aria-label="Signal history"></ol>
+      <section id="detail" class="detail" aria-label="Selected signal" hidden></section>
+    </aside>
+  </main>
+</body>
+</html>

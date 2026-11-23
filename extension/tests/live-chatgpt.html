@@ -1,0 +1,133 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>ChatGPT capture integration fixture</title>
+<output id="status">Running</output>
+<div id="transcript" data-rail-chat-transcript="true" data-chatgpt-conversation-selection-target="a123">
+  <div id="group" data-talvt-turn-state="streaming">
+    <div data-chatgpt-search-message-ids="user-1">
+      <div data-content-search-unit-key="group:0:user">
+        <div data-user-message-bubble><div data-search-result-target><span>Draft a </span><b>reply</b><em> I’ll edit</em></div></div>
+      </div>
+    </div>
+    <div id="assistant" data-chatgpt-search-message-ids="answer-1 answer-1" data-content-search-unit-key="group:2:assistant">
+      <div data-response-body><div data-dil-response><p>You only <strong>need me</strong>.</p></div></div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { mountLiveChat } from '../live-chatgpt.mjs';
+import { createFocusedScorer } from '../focused-scorer.mjs';
+const status = document.querySelector('#status');
+try {
+  const messages = [];
+  const jobs = [];
+  let listener;
+  Object.defineProperty(window, 'chrome', { value: { runtime: {
+    id: 'local-fixture',
+    onMessage: { addListener: accept => { listener = accept; } },
+    sendMessage: async message => { messages.push(message); },
+    connect: () => {
+      let receive;
+      const job = { canceled: false };
+      return {
+        onMessage: { addListener: accept => { receive = accept; } },
+        onDisconnect: { addListener() {} },
+        postMessage: ({ turns }) => {
+          job.turns = turns;
+          job.fail = () => receive({ error: true });
+          job.complete = () => {
+            const scorer = createFocusedScorer();
+            let assessment;
+            for (const turn of turns) assessment = scorer.push(turn);
+            receive({ assessment });
+          };
+          jobs.push(job);
+        },
+        disconnect: () => { job.canceled = true; },
+      };
+    },
+  } } });
+  const ask = (type, fields = {}) => {
+    let result;
+    listener({ type, ...fields }, { id: 'local-fixture' }, reply => { result = reply; });
+    return result;
+  };
+  const assert = (condition, label) => { if (!condition) throw new Error(label); };
+  history.replaceState({}, '', '/');
+  mountLiveChat();
+  assert(ask('live/analyze').conversationId === null, 'blank chat exposed consent');
+  history.pushState({}, '', '/c/local-chatgpt%3Afixture');
+  assert(!ask('live/analyze').enabled, 'provisional route exposed consent');
+  history.replaceState({}, '', '/c/a123');
+  let state = ask('live/get-state');
+  assert(!state.enabled && state.conversationId === 'a123' && !state.turns.length, 'new route inherited consent');
+  assert(!ask('live/analyze').enabled, 'unscoped consent accepted');
+  state = ask('live/analyze', { conversationId: 'a123' });
+  assert(state.enabled && state.turns.length === 1 && state.turns[0].id === 'user-1', 'streaming assistant leaked');
+  assert(jobs.length === 1 && jobs[0].turns.length === 1 && state.pending === 1, 'unexpected initial scoring request');
+  jobs[0].complete();
+  state = ask('live/get-state');
+  const h1 = state.assessments[0].findings.filter(f => f.code === 'H1');
+  assert(h1.length === 1, 'expected exactly one H1');
+  const group = document.querySelector('#group');
+  const duplicate = document.querySelector('#assistant').cloneNode(true);
+  duplicate.removeAttribute('id');
+  group.append(duplicate);
+  group.dataset.talvtTurnState = 'complete';
+  await new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done)));
+  state = ask('live/get-state');
+  assert(state.turns.length === 2 && state.turns[1].id === 'answer-1', 'completion or deduplication failed');
+  assert(jobs.length === 1 && state.unreviewed === 1 && !state.following, 'one-time analysis scored a later turn');
+  state = ask('live/set-following', { conversationId: 'a123', following: true });
+  assert(state.following && state.pending === 1, 'follow mode did not queue the new turn');
+  assert(jobs.length === 2 && jobs[1].turns.length === 2, 'missing assistant prefix');
+  jobs[1].fail();
+  state = ask('live/get-state');
+  assert(state.failures === 1 && state.failedTurns[0] === 2, 'failure did not identify its turn');
+  state = ask('live/retry', { conversationId: 'a123' });
+  assert(state.failures === 0 && state.pending === 1 && jobs.length === 3, 'failed turn could not be retried');
+  jobs[2].complete();
+  state = ask('live/get-state');
+  assert(state.assessments[1].findings.some(f => f.code === 'A1'), 'assistant was not scored');
+  assert(state.assessments.flatMap(a => a.findings).filter(f => f.code === 'H1').length === 1, 'H1 was duplicated');
+  const [{start, end, quote}] = h1;
+  const evidence = { conversationId: 'a123', id: 'user-1', turn: 1, start, end, quote };
+  assert(!ask('live/jump', { ...evidence, id: 'stale-id' }).ok, 'stale evidence was accepted');
+  assert(ask('live/jump', evidence).ok, 'jump failed');
+  const [range] = CSS.highlights.get('conversation-lens-evidence');
+  assert(range.toString() === quote && range.startContainer.parentElement.tagName === 'SPAN' &&
+    range.endContainer.parentElement.tagName === 'EM', 'jump did not select the exact multi-node evidence');
+  assert(ask('live/get-state').activeEvidence?.id === 'user-1', 'active evidence did not match the selection');
+  assert(!ask('live/latest', { conversationId: 'stale' }).ok, 'stale latest accepted');
+  assert(ask('live/latest', { conversationId: 'a123' }).ok && !CSS.highlights.has('conversation-lens-evidence'),
+    'return to latest preserved the highlight');
+  assert(CSS.highlights.has('conversation-lens-user') && CSS.highlights.has('conversation-lens-assistant'),
+    'return to latest removed the passive marks');
+  assert(ask('live/jump', evidence).ok, 'could not inspect again after returning to latest');
+  group.querySelector('[data-search-result-target] em').textContent = ' I’ll edit today';
+  state = ask('live/get-state');
+  assert(state.assessments.length === 0 && state.pending === 2, 'edited prefix retained stale assessments');
+  const staleJob = jobs[3];
+  history.pushState({}, '', '/c/b456');
+  state = ask('live/get-state');
+  assert(state.conversationId === 'b456' && !state.enabled && !state.turns.length, 'route did not clear data');
+  assert(!CSS.highlights.has('conversation-lens-evidence'), 'route did not clear highlight');
+  assert(staleJob.canceled, 'navigation did not cancel the request');
+  staleJob.complete();
+  assert(!ask('live/get-state').assessments.length, 'stale result crossed chats');
+  assert(!ask('live/jump', evidence).ok, 'stale chat jump accepted');
+  assert(!ask('live/analyze', { conversationId: 'a123' }).enabled, 'stale scoped consent accepted');
+  state = ask('live/analyze', { conversationId: 'b456' });
+  assert(state.enabled && !state.turns.length, 'captured stale transcript for another chat');
+  history.back();
+  await new Promise(done => addEventListener('popstate', done, { once: true }));
+  assert(!ask('live/get-state').enabled, 'back navigation restored consent');
+  state = ask('live/analyze', { conversationId: 'a123' });
+  assert(state.enabled && !state.following && state.pending === 2, 'new manual run inherited follow state');
+  assert(messages.length >= 6 && messages.every(m => Object.keys(m).length === 1 && m.type === 'live/updated'), 'bad invalidation payload');
+  status.textContent = 'PASS — completed turns, one-time and live scoring, scoped retries, exact evidence, return to latest, edits, cancellation, and consent';
+} catch (error) {
+  status.textContent = 'FAIL — ' + error.message;
+  console.error(error);
+}
+</script>

@@ -1,10 +1,10 @@
-html[data-clens-open="true"] {
+html[data-clens-demo][data-clens-open="true"] {
   width: calc(100% - var(--clens-width, 350px)) !important;
   max-width: calc(100% - var(--clens-width, 350px)) !important;
   overflow-x: hidden !important;
 }
-html[data-clens-open="true"] body { min-width: 0 !important; }
+html[data-clens-demo][data-clens-open="true"] body { min-width: 0 !important; }
 @media (max-width: 760px) {
-  html[data-clens-open="true"] { width: 100% !important; max-width: 100% !important; }
+  html[data-clens-demo][data-clens-open="true"] { width: 100% !important; max-width: 100% !important; }
 }
 clens-root { all: initial; }

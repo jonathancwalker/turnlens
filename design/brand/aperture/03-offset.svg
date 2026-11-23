@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<title id="title">Offset aperture with asymmetric corners around a revealed point</title>
+<g fill="none" stroke="#273348" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M26 48V26h31"/><path d="M84 26h18v32"/><path d="M102 84v18H71"/><path d="M44 102H26V71"/></g>
+<circle cx="64" cy="64" r="10" fill="#E8A94F"/>
+</svg>

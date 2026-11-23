@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<title id="title">Aperture: four soft corners frame one visible point</title>
+<path d="M26 48V27h21M81 27h21v21M102 80v21H81M47 101H26V80" fill="none" stroke="#273348" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="64" cy="64" r="12" fill="#E8A94F"/>
+</svg>

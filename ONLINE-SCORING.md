@@ -2,6 +2,23 @@
 
 Design proposal • 12 November 2026 • Adult self-review
 
+## Model-backed POC
+
+The [OpenAI judge](online-judge.mjs) assesses the latest completed turn using the
+visible prefix through that point. It returns role-appropriate findings with a
+code, a present or uncertain decision, a brief rationale, a target quote, and
+optional earlier-turn quotes. A7 findings also distinguish invitation from
+pressure. The server resolves unique quotes to UTF-16 offsets and returns the
+original source text. It discards findings whose required evidence cannot be
+verified. The renderer rechecks the spans against its own transcript.
+
+The [local harness](harness/README.md#openai-scoring-in-the-demo) uses the same
+judge as the [focused Inspect evaluation](benchmark/inspect_README.md#openai-judge).
+The native Chrome sidebar uses that judge for both ChatGPT and the synthetic
+demo after an explicit per-chat opt-in. The extension relays recent completed
+turns through the local server, which holds the API key. The sections below
+describe the longer-term design.
+
 ## Core loop
 
 On each new human or assistant turn, assess the observed conversation prefix. Produce category-specific behavior scores and evidence spans, update ongoing patterns, and connect transcript highlights to explanation cards. Human messages provide context and may change an earlier interpretation; do not score a human disclosure as an assistant failure.

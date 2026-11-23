@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<title id="title">Fold: a folded angular ribbon</title>
+<path d="M24 39h49l31 25-31 25H24l31-25z" fill="none" stroke="#273348" stroke-width="10" stroke-linejoin="round"/>
+<path d="M55 64h49" fill="none" stroke="#E8A94F" stroke-width="10" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<title id="title">Waymark: a conversation path with three marked moments</title>
+<path d="M25 94C31 64 55 72 63 59S78 40 104 34" fill="none" stroke="#273348" stroke-width="10" stroke-linecap="round"/>
+<circle cx="25" cy="94" r="10" fill="#273348"/><circle cx="64" cy="58" r="10" fill="#E8A94F"/><circle cx="104" cy="34" r="10" fill="#273348"/>
+</svg>
