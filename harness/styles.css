@@ -103,6 +103,13 @@ textarea { resize: vertical; }
 #done-settings { background: #111; color: #fff; border: 0; border-radius: 7px; padding: 5px 13px; font-size: 13px; }
 .options { display: grid; gap: 12px; padding-top: 14px; font-size: 13px; }
 .options label { display: grid; gap: 4px; }
+.key-form { display: grid; gap: 5px; padding-bottom: 11px; border-bottom: 1px solid #eee; }
+.key-actions { display: flex; gap: 6px; }
+#api-key { flex: 1; min-width: 0; padding: 6px; border: 1px solid #ccc; border-radius: 6px; }
+#use-key { flex: none; padding: 5px 10px; background: #111; color: #fff; border: 0; border-radius: 6px; }
+#key-help, #key-status { color: #595959; }
+#key-status:empty { display: none; }
+#clear-key { justify-self: start; }
 .options select { width: 100%; border: 1px solid #ccc; border-radius: 6px; padding: 6px; background: #fff; color: #111; }
 #prompt { margin-top: 8px; display: block; }
 .samples { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding-top: 10px; border-top: 1px solid #eee; }

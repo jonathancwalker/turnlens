@@ -19,20 +19,14 @@ const extensionId = createHash('sha256').update(Buffer.from(manifest.key, 'base6
   .slice(0, 32).replace(/[a-f0-9]/g, digit => String.fromCharCode(97 + Number.parseInt(digit, 16)));
 const extensionOrigin = `chrome-extension://${extensionId}`;
 const adapterPath = process.env.CHAT_JUDGE_ADAPTER;
-const judgeKey = process.env.OPENAI_API_KEY;
+const configuredKey = process.env.OPENAI_API_KEY;
+let sessionKey = null;
+const activeKey = () => sessionKey ?? configuredKey;
 const adapter = adapterPath && (await import(pathToFileURL(resolve(adapterPath)).href)).generateReply;
 if (adapterPath && typeof adapter !== 'function') {
   throw new Error('CHAT_JUDGE_ADAPTER must export a generateReply function.');
 }
 const replyModel = process.env.OPENAI_REPLY_MODEL || defaultJudgeModel;
-const generateReply = adapter || (judgeKey ? async ({ systemPrompt, turns, signal }) => {
-  const result = await requestOpenAIText({
-    apiKey: judgeKey, signal, model: replyModel, instructions: systemPrompt.trim() || undefined,
-    input: turns.map(({ role, text }) => ({ role, content: text })),
-    max_output_tokens: 700,
-  });
-  return result.text;
-} : null);
 
 const headers = {
   'Cache-Control': 'no-store',
@@ -52,6 +46,35 @@ for (const [route, path, type] of [
 function respond(res, status, body, type = 'application/json') {
   res.writeHead(status, { ...headers, 'Content-Type': `${type}; charset=utf-8` });
   res.end(type === 'application/json' ? JSON.stringify(body) : body);
+}
+
+function config() {
+  return {
+    modelAvailable: Boolean(adapter || activeKey()),
+    modelLabel: adapter ? 'Model adapter' : 'OpenAI',
+    judgeAvailable: Boolean(activeKey()),
+    sessionKeyActive: sessionKey !== null,
+  };
+}
+
+function localJson(req) {
+  return req.headers.origin === `http://${req.headers.host}` &&
+    req.headers['content-type']?.split(';')[0] === 'application/json';
+}
+
+async function configureKey(req, res) {
+  if (!localJson(req)) {
+    respond(res, 403, { error: 'Local JSON requests only.' });
+    return;
+  }
+  const body = await parseRequest(req);
+  const key = typeof body?.key === 'string' ? body.key.trim() : body?.key;
+  if (key !== null && (typeof key !== 'string' || key.length > 512 || !/^sk-[A-Za-z0-9_-]+$/.test(key))) {
+    respond(res, 400, { error: 'Enter a valid OpenAI API key.' });
+    return;
+  }
+  sessionKey = key;
+  respond(res, 200, config());
 }
 
 async function parseRequest(req) {
@@ -80,12 +103,13 @@ function isPrefix(body, maxTurnLength) {
 }
 
 async function reply(req, res) {
-  if (req.headers.origin !== `http://${req.headers.host}` || req.headers['content-type']?.split(';')[0] !== 'application/json') {
+  if (!localJson(req)) {
     respond(res, 403, { error: 'Local JSON requests only.' });
     return;
   }
-  if (!generateReply) {
-    respond(res, 503, { error: 'Model replies are unavailable. Start the server with its OpenAI key or a reply adapter.' });
+  const apiKey = activeKey();
+  if (!adapter && !apiKey) {
+    respond(res, 503, { error: 'Add an OpenAI key in local demo settings or configure a reply adapter.' });
     return;
   }
   const body = await parseRequest(req);
@@ -100,7 +124,13 @@ async function reply(req, res) {
   const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]);
   try {
     const turns = body.turns.map(({ role, text }) => ({ role, text }));
-    const text = await generateReply({ systemPrompt: body.systemPrompt, turns, signal });
+    const text = adapter
+      ? await adapter({ systemPrompt: body.systemPrompt, turns, signal })
+      : (await requestOpenAIText({
+        apiKey, signal, model: replyModel, instructions: body.systemPrompt.trim() || undefined,
+        input: turns.map(({ role, text }) => ({ role, content: text })),
+        max_output_tokens: 700,
+      })).text;
     if (signal.aborted || typeof text !== 'string' || !text.trim() || text.length > 4000) {
       throw new Error('Invalid or expired model reply');
     }
@@ -116,6 +146,7 @@ async function score(req, res, fromExtension) {
     respond(res, 403, { error: 'Local JSON requests only.' });
     return;
   }
+  const judgeKey = activeKey();
   if (!judgeKey) {
     respond(res, 503, { error: 'OpenAI judge is unconfigured.' });
     return;
@@ -148,7 +179,7 @@ const server = createServer(async (req, res) => {
         return;
       }
       if (req.url === '/harness/api/config') {
-        respond(res, 200, { modelAvailable: Boolean(generateReply), modelLabel: adapter ? 'Model adapter' : 'OpenAI' });
+        respond(res, 200, config());
         return;
       }
       const asset = staticRoutes.get(req.url);
@@ -156,6 +187,10 @@ const server = createServer(async (req, res) => {
         respond(res, 200, asset.body, asset.type);
         return;
       }
+    }
+    if (req.method === 'POST' && req.url === '/harness/api/key') {
+      await configureKey(req, res);
+      return;
     }
     if (req.method === 'POST' && req.url === '/harness/api/reply') {
       await reply(req, res);
@@ -173,5 +208,5 @@ const server = createServer(async (req, res) => {
 
 server.listen(port, '127.0.0.1', () => {
   console.log(`Real-Time Chat Judge demo: ${origin}/harness/`);
-  console.log(adapter ? 'Custom model replies enabled.' : generateReply ? 'OpenAI replies and scoring enabled.' : 'Scripted replies enabled.');
+  console.log(adapter ? 'Custom model replies enabled.' : configuredKey ? 'OpenAI replies and scoring enabled.' : 'Scripted replies enabled.');
 });

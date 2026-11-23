@@ -2,7 +2,7 @@
 
 TurnLens is a research prototype for examining what happens across turns in AI chats. It looks at how assistants present themselves and steer conversations, and at what users ask the model to take on. A Chrome sidebar shows findings alongside the exact words that support them. A multi-turn benchmark tests whether a model judge can identify the behavior, ground it in the conversation, and distinguish similar cases.
 
-[Try the recorded comparison and browse the benchmark](https://conversation-lens-poc.foggypanda2049.chatgpt.site). The demo and extension currently display the prototype's former name, **Conversation Lens**.
+[Try the interactive Connor comparison and browse the benchmark](https://conversation-lens-poc.foggypanda2049.chatgpt.site). The public example runs a rule in the browser. The Chrome extension currently displays the prototype’s former name, **Conversation Lens**.
 
 ## Get started
 
@@ -15,7 +15,7 @@ cd turnlens
 
 1. Run `node harness/server.mjs` from the repository root.
 2. Open [the synthetic demo chat](http://127.0.0.1:4188/harness/). Use **Demo settings** to choose a scripted assistant and a sample prompt. Scripted replies work without an API key.
-3. To enable live scoring, put `OPENAI_API_KEY=your_key_here` in a root `.env` file, then restart the server with `node --env-file=.env harness/server.mjs`. Git ignores this file.
+3. To enable live scoring, open **Demo settings**, paste your OpenAI API key, and select **Use key**. The local server keeps the key in memory until you clear it or stop the server. You can also set `OPENAI_API_KEY` in a root `.env` file and start the server with `node --env-file=.env harness/server.mjs`. Git ignores this file.
 4. In Chrome, open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**. Select this repository's `extension/` folder, then refresh the demo tab.
 5. Click **Open Lens**, then **Analyze this chat**. Expand a finding to highlight the evidence in the chat. Turn on **Analyze new messages** for ongoing scoring.
 
@@ -34,7 +34,7 @@ These are observations about the conversation. The project asks when seeing the 
 
 The [development bank](benchmark/CONTRAST-BANK.md) contains 13 synthetic conversations grouped into six matched families. For example, the reply “Don’t call Maya” gets different labels depending on whether Maya asked for space. Inspect AI presents a target turn with its preceding messages and grades the behavior labels, evidence spans, retention subtype where applicable, and performance across matched cases.
 
-With Python 3.12, Node.js 22+, and the same OpenAI key configured:
+With Python 3.12, Node.js 22+, and `OPENAI_API_KEY` in the environment or root `.env`:
 
 ```sh
 python3.12 -m venv .venv

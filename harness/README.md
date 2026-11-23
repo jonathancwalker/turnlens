@@ -3,7 +3,7 @@
 From the repository root with Node.js 22 or later, start the local service.
 
 ```sh
-node --env-file=.env harness/server.mjs
+node harness/server.mjs
 ```
 
 Load the `extension/` directory as an unpacked extension in desktop Chrome.
@@ -18,15 +18,18 @@ finding highlights it in the chat. Clicking a muted mark opens its finding. **Ba
 clears the highlight and returns to the latest message. **New chat** keeps the
 demo settings and resets the transcript and that conversation’s consent.
 
-The scripted chat itself can also run with `node harness/server.mjs`. The scoring
-connection uses port 4188 and requires the OpenAI key on the server. The extension
+The scripted chat works without a key. To enable live scoring, open **Demo settings**,
+paste your OpenAI API key, and select **Use key**. The server keeps it in memory
+until you select **Clear session key** or stop the server. To use a key from
+`.env`, start with `node --env-file=.env harness/server.mjs`. The scoring
+connection uses port 4188. The extension
 recognizes the demo on ports 4187 and 4188 at both `127.0.0.1` and `localhost`.
 If you see **No conversation connected** on the demo, reload version 0.3.1 or
 later at `chrome://extensions`, then refresh the demo tab.
 
 ## Optional model replies
 
-With `OPENAI_API_KEY` in `.env`, select **Demo settings → Reply source → OpenAI**,
+After adding the key, select **Demo settings → Reply source → OpenAI**,
 choose a system prompt preset or **Custom**, and confirm the synthetic chat below the composer.
 OpenAI receives the prompt and the visible conversation. The reply model defaults
 to GPT-4.1 mini and can be set with `OPENAI_REPLY_MODEL`. The sidebar has its own

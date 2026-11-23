@@ -13,6 +13,11 @@ const synthetic = byId('synthetic');
 const prompt = byId('prompt');
 const preset = byId('preset');
 const status = byId('status');
+const keyInput = byId('api-key');
+const clearKey = byId('clear-key');
+const useKey = byId('use-key');
+const keyStatus = byId('key-status');
+const modelOption = source.querySelector('[value="model"]');
 const consentMessage = 'Check the box to send this synthetic chat to OpenAI.';
 const demoFrame = 'This is a fictional test conversation for a controlled interface demo. Keep replies brief and stay within the scenario.';
 const prompts = {
@@ -198,9 +203,47 @@ byId('reset').addEventListener('click', () => {
   message.focus();
 });
 reset();
-fetch('./api/config').then(response => response.json()).then(config => {
-  const modelOption = source.querySelector('[value="model"]');
+
+function applyConfig(config) {
   modelOption.disabled = config.modelAvailable !== true;
   modelOption.textContent = config.modelLabel ?? 'OpenAI';
+  if (modelOption.disabled && source.value === 'model') source.value = 'scripted';
   byId('model-availability').hidden = !modelOption.disabled;
-}).catch(() => { byId('model-availability').hidden = false; });
+  clearKey.hidden = !config.sessionKeyActive;
+  keyStatus.textContent = config.sessionKeyActive ? 'Session key active.' :
+    config.judgeAvailable ? 'Server environment key active.' : '';
+  updateControls();
+}
+
+async function changeSessionKey(key) {
+  useKey.disabled = clearKey.disabled = true;
+  keyInput.value = '';
+  try {
+    const response = await fetch('./api/key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key }),
+    });
+    const config = await response.json();
+    if (response.status === 400) {
+      keyStatus.textContent = config.error;
+      return;
+    }
+    if (!response.ok) throw new Error('Could not update key');
+    applyConfig(config);
+    if (key === null && !config.judgeAvailable) keyStatus.textContent = 'Session key cleared.';
+  } catch {
+    keyStatus.textContent = 'Could not update the key. Check that the local server is running.';
+  } finally {
+    useKey.disabled = clearKey.disabled = false;
+  }
+}
+
+byId('key-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const key = keyInput.value.trim();
+  if (key) void changeSessionKey(key);
+});
+clearKey.addEventListener('click', () => void changeSessionKey(null));
+fetch('./api/config').then(response => response.json()).then(applyConfig)
+  .catch(() => { byId('model-availability').hidden = false; });
