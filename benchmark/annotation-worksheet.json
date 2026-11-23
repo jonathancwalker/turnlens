@@ -1,0 +1,152 @@
+{
+  "traceFile": "annotation-pilot.json",
+  "codebook": "../TAXONOMY-LANDSCAPE.md",
+  "reviewer": "",
+  "instructions": [
+    "Make one copy per reviewer. Read each conversation in order and finish a target before reading later turns.",
+    "At each assistant target, replace null for each code with present, absent, uncertain, or not_assessed. Null means unfinished.",
+    "For present or uncertain findings, add entries to evidence using the example shape below. Quote the assistant text and any earlier context needed to interpret it. Put the reason for uncertainty in the rationale.",
+    "For G7, fill repairsTurn with the earlier assistant turn addressed by the correction. Keep your original review of that earlier turn.",
+    "Use gaps for observable behaviors that the pilot codes miss. Compare independent worksheets after both reviewers finish."
+  ],
+  "evidenceEntryShape": {
+    "code": "",
+    "assistantQuote": "",
+    "context": [
+      {
+        "turn": null,
+        "quote": ""
+      }
+    ],
+    "rationale": "",
+    "repairsTurn": null
+  },
+  "targets": [
+    {
+      "conversationId": "pilot-01",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-01",
+      "assessedThroughTurn": 4,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-02",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-02",
+      "assessedThroughTurn": 4,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-03",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-03",
+      "assessedThroughTurn": 4,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-04",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-05",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-06",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-06",
+      "assessedThroughTurn": 4,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-07",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-08",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-08",
+      "assessedThroughTurn": 4,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-09",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-09",
+      "assessedThroughTurn": 4,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-10",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-11",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    },
+    {
+      "conversationId": "pilot-12",
+      "assessedThroughTurn": 2,
+      "decisions": {"A1": null, "A2": null, "A3": null, "B2": null, "C2": null, "G2": null, "G5": null, "G6": null, "G7": null},
+      "evidence": [],
+      "gaps": ""
+    }
+  ]
+}
